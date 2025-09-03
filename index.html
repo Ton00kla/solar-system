@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ระบบสุริยะ 3D</title>
+  <style>
+    body { margin: 0; background: black; overflow: hidden; color: white; }
+    #infoBox {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 300px;
+      padding: 15px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid white;
+      border-radius: 10px;
+      display: none;
+    }
+    #infoBox h2 { margin: 0 0 10px; }
+  </style>
+</head>
+<body>
+  <div id="infoBox"></div>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    // 🚀 ตั้งค่า Scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // 🔆 แสง
+    const light = new THREE.PointLight(0xffffff, 2, 1000);
+    light.position.set(0,0,0);
+    scene.add(light);
+
+    // 🌍 ฟังก์ชันสร้างดาว
+    function createPlanet(size, textureUrl, x, name) {
+      const texture = new THREE.TextureLoader().load(textureUrl);
+      const geometry = new THREE.SphereGeometry(size, 32, 32);
+      const material = new THREE.MeshStandardMaterial({ map: texture });
+      const planet = new THREE.Mesh(geometry, material);
+      planet.position.x = x;
+      planet.userData = { name: name };
+      scene.add(planet);
+      return planet;
+    }
+
+    // ☀️ ดวงอาทิตย์
+    const sun = createPlanet(4, "https://upload.wikimedia.org/wikipedia/commons/4/4a/Sun_white.jpg", 0, "sun");
+
+    // 🪐 ดาวเคราะห์
+    const planets = [
+      createPlanet(0.5, "https://upload.wikimedia.org/wikipedia/commons/2/2e/Mercury_in_true_color.jpg", 8, "mercury"),
+      createPlanet(0.9, "https://upload.wikimedia.org/wikipedia/commons/8/85/Venus_globe.jpg", 12, "venus"),
+      createPlanet(1, "https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg", 16, "earth"),
+      createPlanet(0.7, "https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg", 20, "mars"),
+      createPlanet(2, "https://upload.wikimedia.org/wikipedia/commons/e/e2/Jupiter.jpg", 28, "jupiter"),
+      createPlanet(1.7, "https://upload.wikimedia.org/wikipedia/commons/c/c7/Saturn_during_Equinox.jpg", 36, "saturn"),
+      createPlanet(1.5, "https://upload.wikimedia.org/wikipedia/commons/3/3d/Uranus2.jpg", 44, "uranus"),
+      createPlanet(1.5, "https://upload.wikimedia.org/wikipedia/commons/5/56/Neptune_Full.jpg", 52, "neptune")
+    ];
+
+    // 📌 ข้อมูลโครงสร้างภายใน
+    const planetData = {
+      sun: {
+        title: "☀️ ดวงอาทิตย์",
+        info: "ดาวฤกษ์ศูนย์กลางระบบสุริยะ<br>โครงสร้าง: แกนกลาง (Core), บริเวณพาความร้อน (Convective Zone), ชั้นโฟโตสเฟียร์"
+      },
+      mercury: {
+        title: "☿ ดาวพุธ",
+        info: "ดาวเคราะห์ที่เล็กที่สุด<br>โครงสร้าง: แกนเหล็กใหญ่, แมนเทิลบาง, เปลือกหิน"
+      },
+      venus: {
+        title: "♀ ดาวศุกร์",
+        info: "ดาวเคราะห์ร้อนที่สุด<br>โครงสร้าง: แกนโลหะ, แมนเทิล, เปลือกหนา"
+      },
+      earth: {
+        title: "🌍 โลก",
+        info: "บ้านของเรา<br>โครงสร้าง: แกนใน (Solid Iron), แกนนอก (Liquid Iron), แมนเทิล, เปลือกโลก"
+      },
+      mars: {
+        title: "♂ ดาวอังคาร",
+        info: "ดาวเคราะห์สีแดง<br>โครงสร้าง: แกนโลหะ, แมนเทิล, เปลือกบาง"
+      },
+      jupiter: {
+        title: "♃ ดาวพฤหัสบดี",
+        info: "ดาวเคราะห์ก๊าซที่ใหญ่ที่สุด<br>โครงสร้าง: แกนหิน/น้ำแข็งเล็ก, ไฮโดรเจนโลหะ, ไฮโดรเจนก๊าซ"
+      },
+      saturn: {
+        title: "♄ ดาวเสาร์",
+        info: "มีวงแหวนสวยงาม<br>โครงสร้าง: คล้ายพฤหัสบดี (แกนหินเล็ก, ไฮโดรเจนโลหะ, ไฮโดรเจนก๊าซ)"
+      },
+      uranus: {
+        title: "♅ ดาวยูเรนัส",
+        info: "หมุนเอียงข้าง<br>โครงสร้าง: แกนหินเล็ก, แมนเทิลน้ำแข็ง, ไฮโดรเจน-ฮีเลียม"
+      },
+      neptune: {
+        title: "♆ ดาวเนปจูน",
+        info: "ลมแรงที่สุดในระบบสุริยะ<br>โครงสร้าง: คล้ายยูเรนัส (แกนหินเล็ก, แมนเทิลน้ำแข็ง, ไฮโดรเจน-ฮีเลียม)"
+      }
+    };
+
+    // 👆 คลิกเลือกดาว
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    window.addEventListener("click", (event) => {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects([sun, ...planets]);
+      if (intersects.length > 0) {
+        const planet = intersects[0].object.userData.name;
+        const data = planetData[planet];
+        const box = document.getElementById("infoBox");
+        box.style.display = "block";
+        box.innerHTML = `<h2>${data.title}</h2><p>${data.info}</p>`;
+      }
+    });
+
+    // 🎥 กล้อง + ควบคุม
+    camera.position.z = 70;
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    // 🔄 Animation
+    function animate() {
+      requestAnimationFrame(animate);
+      sun.rotation.y += 0.002;
+      planets.forEach(p => p.rotation.y += 0.01);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
